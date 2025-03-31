@@ -63,7 +63,7 @@ class MyPlugin(BasePlugin):
                     except requests.RequestException as e:
                         print(f"下载图片 {img_url} 失败: {e}")
                         continue
-                    print(f'{query} :{img}')
+                    # print(f'{query} :{img}')
                     return img
             else:
                 print(f"未找到与查询 '{query}' 相关的图片结果。")
@@ -82,7 +82,7 @@ class MyPlugin(BasePlugin):
     @handler(PersonNormalMessageReceived)
     async def person_normal_message_received(self, ctx: EventContext):
         msg = ctx.event.text_message  # 这里的 event 即为 PersonNormalMessageReceived 的对象
-        print('plugin handle:',msg)
+        print('plugin handle:', msg)
         if msg == "hello":  # 如果消息为hello
 
             # 输出调试信息
@@ -101,7 +101,8 @@ class MyPlugin(BasePlugin):
             img = await self.get_local_search_url(keyword)
             if img:
                 # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
-                ctx.add_return("reply", [platform_types.Image(url=f'{img["url"]}')])
+                print('add pic from:', img['local_path'], ':', img["url"])
+                ctx.add_return("reply", [platform_types.Image(url=img["url"])])
 
             # 阻止该事件默认行为（向接口获取回复）
         ctx.prevent_default()
