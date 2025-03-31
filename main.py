@@ -100,7 +100,8 @@ class MyPlugin(BasePlugin):
             # 调用搜索函数
             img = await self.get_local_search_url(keyword)
             if img:
-                ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
+                # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
+                ctx.add_return("reply", [platform_types.Image(url=f'{img["url"]}')])
 
             # 阻止该事件默认行为（向接口获取回复）
         ctx.prevent_default()
