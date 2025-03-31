@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import base64
 import json
 
@@ -20,7 +21,7 @@ class MyPlugin(BasePlugin):
     async def initialize(self):
         pass
 
-    async def get_local_search_url(self, query, num_results=5, searx_host="http://124.223.45.165:22109"):
+    async def get_local_search_url(self, query, num_results=10, searx_host="http://124.223.45.165:22109"):
         url = f"{searx_host}/search"
         params = {
             "q": query,
@@ -58,8 +59,8 @@ class MyPlugin(BasePlugin):
                             shutil.copyfileobj(img_response.raw, out_file)
                         img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
                                'local_path': img_filename}
-                        # with open(img_filename, 'rb') as img_file:
-                        #     img['base64'] = base64.b64encode(img_file.read()).decode()
+                        with open(img_filename, 'rb') as img_file:
+                            img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
                     except requests.RequestException as e:
                         print(f"下载图片 {img_url} 失败: {e}")
                         continue
@@ -104,7 +105,7 @@ class MyPlugin(BasePlugin):
                 # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
                 print('add pic from:', img['local_path'], ':', img["url"])
                 # ctx.add_return("reply", [platform_types.Image(url=img["url"])])
-                ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
+                ctx.add_return("reply", [platform_types.Image(path=img["local_path"], base64=img["base64"])])
             # 阻止该事件默认行为（向接口获取回复）
         ctx.prevent_default()
 
