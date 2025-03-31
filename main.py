@@ -59,7 +59,7 @@ class MyPlugin(BasePlugin):
                         img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
                                'local_path': img_filename}
                         with open(img_filename, 'rb') as img_file:
-                            img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
+                            img['base64'] = base64.b64encode(img_file.read()).decode()
                     except requests.RequestException as e:
                         print(f"下载图片 {img_url} 失败: {e}")
                         continue
