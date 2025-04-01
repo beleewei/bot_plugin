@@ -21,7 +21,7 @@ class MyPlugin(BasePlugin):
     async def initialize(self):
         pass
 
-    async def get_local_search_url(self, query, num_results=10, searx_host="http://124.223.45.165:22109"):
+    async def get_local_search_url(self, query,sender, num_results=10, searx_host="http://124.223.45.165:22109"):
         url = f"{searx_host}/search"
         params = {
             "q": query,
@@ -38,13 +38,14 @@ class MyPlugin(BasePlugin):
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
         try:
-            print('start query keyword:', query)
+            print('start query keyword:', query,'sender:', sender)
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params) as response:
                     response.raise_for_status()  # 检查是否有 HTTP 错误
                     results = await response.json()  # 异步解析 JSON
                     img = {}
                     for it in results['results']:
+                        print('search result:',it)
                         if 'resolution' in it and 'img_src' in it:
                             print(it['resolution'], it['source'], it['title'], it['img_src'])
                             parts = it['resolution'].split('x')
@@ -60,7 +61,7 @@ class MyPlugin(BasePlugin):
                                         out_file.write(await img_response.read())  # 异步读取图片内容
                                     img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
                                            'local_path': img_filename}
-                                    await self.host.send_active_message('person', 'ou_63053bc6508a9fc06be536d937b50e4e',
+                                    await self.host.send_active_message('person', sender,
                                                                         [platform_types.Image(id=img_filename,
                                                                                               path=img_filename,
                                                                                               url=img_url)])
@@ -73,7 +74,7 @@ class MyPlugin(BasePlugin):
                             return img
                         else:
                             print(f"未找到与查询 '{query}' 相关的图片结果。")
-                            return None
+                            continue
         except aiohttp.ClientError as e:
             print(f"搜索查询 '{query}' 失败: {e}")
             return None
@@ -107,7 +108,7 @@ class MyPlugin(BasePlugin):
                     break
             ctx.prevent_default()
             # 调用搜索函数
-            await self.get_local_search_url(keyword)
+            await self.get_local_search_url(keyword,ctx.event.sender_id)
             # img = await self.get_local_search_url(keyword)
             # if img:
             #     # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
