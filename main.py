@@ -59,12 +59,12 @@ class MyPlugin(BasePlugin):
                             shutil.copyfileobj(img_response.raw, out_file)
                         img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
                                'local_path': img_filename}
-                        with open(img_filename, 'rb') as img_file:
-                            img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
+                        # with open(img_filename, 'rb') as img_file:
+                        #     img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
                     except requests.RequestException as e:
                         print(f"下载图片 {img_url} 失败: {e}")
                         continue
-                    print(f'{query} :{img}')
+                    # print(f'{query} :{img}')
                     return img
             else:
                 print(f"未找到与查询 '{query}' 相关的图片结果。")
@@ -105,7 +105,7 @@ class MyPlugin(BasePlugin):
                 # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
                 print('add pic from:', img['local_path'], ':', img["url"])
                 # ctx.add_return("reply", [platform_types.Image(url=img["url"])])
-                ctx.add_return("reply", [platform_types.Image(path=img["local_path"], base64=img["base64"])])
+                ctx.add_return("reply", [platform_types.Image(id=img["img_filename"], path=img["local_path"], url=img["url"])])
             # 阻止该事件默认行为（向接口获取回复）
         ctx.prevent_default()
 
