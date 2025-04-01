@@ -12,20 +12,19 @@ class MyPlugin(BasePlugin):
     # 插件加载时触发
     def __init__(self, host: APIHost):
         super().__init__(host)
-        for plt in host.get_platform_adapters():
+
+    # 异步初始化
+    async def initialize(self):
+        for plt in self.host.get_platform_adapters():
             print('active platform:', plt.config)
             if plt.config.get('bot_name', 'None') == '小美':
                 msg = platform_types.MessageChain([
                     platform_types.Plain('飞书小美已就位，随时为您提供帮助！')
                 ])
-                self.host.send_active_message(adapter=plt,
-                                              target_type="person",
-                                              target_id='ou_63053bc6508a9fc06be536d937b50e4e',
-                                              message=msg)
-
-    # 异步初始化
-    async def initialize(self):
-        pass
+                await self.host.send_active_message(adapter=plt,
+                                                    target_type="person",
+                                                    target_id='ou_63053bc6508a9fc06be536d937b50e4e',
+                                                    message=msg)
 
     async def get_local_search_url(self, query, sender, num_results=10, searx_host="http://124.223.45.165:22109"):
         url = f"{searx_host}/search"
