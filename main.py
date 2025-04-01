@@ -15,13 +15,23 @@ class MyPlugin(BasePlugin):
 
     # 插件加载时触发
     def __init__(self, host: APIHost):
-        pass
+        super().__init__(host)
+        for plt in host.get_platform_adapters():
+            print('active platform:', plt.name)
+            if plt.name == 'lark':
+                msg = platform_types.MessageChain([
+                    platform_types.Plain('飞书小美已就位，随时为您提供帮助！')
+                ])
+                self.host.send_active_message(adapter=plt,
+                                              target_type="person",
+                                              target_id='ou_63053bc6508a9fc06be536d937b50e4e',
+                                              message=msg)
 
     # 异步初始化
     async def initialize(self):
         pass
 
-    async def get_local_search_url(self, query,sender, num_results=10, searx_host="http://124.223.45.165:22109"):
+    async def get_local_search_url(self, query, sender, num_results=10, searx_host="http://124.223.45.165:22109"):
         url = f"{searx_host}/search"
         params = {
             "q": query,
@@ -38,14 +48,14 @@ class MyPlugin(BasePlugin):
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
         try:
-            print('start query keyword:', query,'sender:', sender)
+            print('start query keyword:', query, 'sender:', sender)
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params) as response:
                     response.raise_for_status()  # 检查是否有 HTTP 错误
                     results = await response.json()  # 异步解析 JSON
                     img = {}
                     for it in results['results']:
-                        print('search result:',it)
+                        print('search result:', it)
                         if 'img_src' in it:
                             # print(it['resolution'], it['source'], it['title'], it['img_src'])
                             # parts = it['resolution'].split('x')
