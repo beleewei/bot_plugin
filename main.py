@@ -96,6 +96,7 @@ class MyPlugin(BasePlugin):
 
             # 回复消息 "hello, <发送者id>!"
             ctx.add_return("reply", ["hello, {}!".format(ctx.event.sender_id)])
+            ctx.prevent_default()
         elif msg.startswith(("search", "搜", "搜索", "查询")):
             ctx.add_return("reply", ["等我找一找，待会儿回复你!"])
             keyword = msg
@@ -104,8 +105,9 @@ class MyPlugin(BasePlugin):
                 if msg.startswith(keyword_prefix):
                     keyword = msg[len(keyword_prefix):].strip()
                     break
+            ctx.prevent_default()
             # 调用搜索函数
-            self.get_local_search_url(keyword)
+            await self.get_local_search_url(keyword)
             # img = await self.get_local_search_url(keyword)
             # if img:
             #     # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
@@ -113,7 +115,7 @@ class MyPlugin(BasePlugin):
             #     # ctx.add_return("reply", [platform_types.Image(url=img["url"])])
             #     ctx.add_return("reply", [platform_types.Image(id=img["img_filename"], path=img["local_path"], url=img["url"])])
             # 阻止该事件默认行为（向接口获取回复）
-        ctx.prevent_default()
+
 
     # 当收到群消息时触发
     @handler(GroupNormalMessageReceived)
