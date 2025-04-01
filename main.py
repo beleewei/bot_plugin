@@ -38,6 +38,7 @@ class MyPlugin(BasePlugin):
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
         try:
+            print('start query keyword:', query)
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params) as response:
                     response.raise_for_status()  # 检查是否有 HTTP 错误
@@ -59,8 +60,12 @@ class MyPlugin(BasePlugin):
                                         out_file.write(await img_response.read())  # 异步读取图片内容
                                     img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
                                            'local_path': img_filename}
-                                    with open(img_filename, 'rb') as img_file:
-                                        img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
+                                    await self.host.send_active_message('person', 'ou_63053bc6508a9fc06be536d937b50e4e',
+                                                                        [platform_types.Image(id=img_filename,
+                                                                                              path=img_filename,
+                                                                                              url=img_url)])
+                                    # with open(img_filename, 'rb') as img_file:
+                                    #     img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
                             except aiohttp.ClientError as e:
                                 print(f"下载图片 {img_url} 失败: {e}")
                                 continue
@@ -92,6 +97,7 @@ class MyPlugin(BasePlugin):
             # 回复消息 "hello, <发送者id>!"
             ctx.add_return("reply", ["hello, {}!".format(ctx.event.sender_id)])
         elif msg.startswith(("search", "搜", "搜索", "查询")):
+            ctx.add_return("reply", ["等我找一找，待会儿回复你!"])
             keyword = msg
             # 截取关键字
             for keyword_prefix in ("search", "搜", "搜索", "查询"):
@@ -99,13 +105,13 @@ class MyPlugin(BasePlugin):
                     keyword = msg[len(keyword_prefix):].strip()
                     break
             # 调用搜索函数
-            print('start query keyword:', keyword)
-            img = await self.get_local_search_url(keyword)
-            if img:
-                # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
-                print('add pic from:', img['local_path'], ':', img["url"])
-                # ctx.add_return("reply", [platform_types.Image(url=img["url"])])
-                ctx.add_return("reply", [platform_types.Image(id=img["img_filename"], path=img["local_path"], url=img["url"])])
+            self.get_local_search_url(keyword)
+            # img = await self.get_local_search_url(keyword)
+            # if img:
+            #     # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
+            #     print('add pic from:', img['local_path'], ':', img["url"])
+            #     # ctx.add_return("reply", [platform_types.Image(url=img["url"])])
+            #     ctx.add_return("reply", [platform_types.Image(id=img["img_filename"], path=img["local_path"], url=img["url"])])
             # 阻止该事件默认行为（向接口获取回复）
         ctx.prevent_default()
 
