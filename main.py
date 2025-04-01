@@ -60,19 +60,19 @@ class MyPlugin(BasePlugin):
                                     with open(img_filename, 'wb') as out_file:
                                         out_file.write(await img_response.read())  # 异步读取图片内容
                                     img = {'url': img_url, 'local_path': img_filename}
-                                    msg = platform_types.MessageChain([
-                                        platform_types.Image(id=img_filename,path=img_filename,url=img_url)
-                                    ])
-                                    await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
-                                                                        target_type="person",
-                                                                        target_id=sender,
-                                                                        message=msg)
-                                    # with open(img_filename, 'rb') as img_file:
-                                    #     img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
+                                    # msg = platform_types.MessageChain([
+                                    #     platform_types.Image(id=img_filename,path=img_filename,url=img_url)
+                                    # ])
+                                    # await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
+                                    #                                     target_type="person",
+                                    #                                     target_id=sender,
+                                    #                                     message=msg)
+                                    with open(img_filename, 'rb') as img_file:
+                                        img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
                             except aiohttp.ClientError as e:
                                 print(f"下载图片 {img_url} 失败: {e}")
                                 continue
-                            print(f'{query} :{img}')
+                            # print(f'{query} :{img}')
                             return img
                         else:
                             print(f"未找到与查询 '{query}' 相关的图片结果。")
@@ -108,17 +108,15 @@ class MyPlugin(BasePlugin):
                 if msg.startswith(keyword_prefix):
                     keyword = msg[len(keyword_prefix):].strip()
                     break
-            ctx.prevent_default()
-            # 调用搜索函数
-            await self.get_local_search_url(keyword,ctx.event.sender_id)
-            # img = await self.get_local_search_url(keyword)
-            # if img:
-            #     # ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
-            #     print('add pic from:', img['local_path'], ':', img["url"])
-            #     # ctx.add_return("reply", [platform_types.Image(url=img["url"])])
-            #     ctx.add_return("reply", [platform_types.Image(id=img["img_filename"], path=img["local_path"], url=img["url"])])
-            # 阻止该事件默认行为（向接口获取回复）
+            import asyncio
+            search_task = asyncio.create_task(self.get_local_search_url(keyword, ctx.event.sender_id))
+            # 你可以在后续代码中使用 await 等待任务完成
+            img = await search_task
+            if img:
+                ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
 
+            # 阻止该事件默认行为（向接口获取回复）
+        ctx.prevent_default()
 
     # 当收到群消息时触发
     @handler(GroupNormalMessageReceived)
