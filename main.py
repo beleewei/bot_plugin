@@ -31,52 +31,52 @@ class MyPlugin(BasePlugin):
         }
         import os
         import shutil
-        import requests
+        import aiohttp  # 引入 aiohttp 库用于异步请求
 
         # 创建img_download目录
         download_dir = os.path.join(os.path.dirname(__file__), 'img_download')
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
-
         try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()  # 检查是否有 HTTP 错误
-            results = response.json()
-            img = {}
-            for it in results['results']:
-                if 'resolution' in it and 'img_src' in it:
-                    print(it['resolution'], it['source'], it['title'], it['img_src'])
-                    parts = it['resolution'].split('x')
-                    if not len(parts) == 2:
-                        continue
-                    img_url = it['img_src']
-                    try:
-                        # 下载图片
-                        img_response = requests.get(img_url, stream=True)
-                        img_response.raise_for_status()
-                        img_filename = os.path.join(download_dir, os.path.basename(img_url))
-                        with open(img_filename, 'wb') as out_file:
-                            shutil.copyfileobj(img_response.raw, out_file)
-                        img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
-                               'local_path': img_filename}
-                        # with open(img_filename, 'rb') as img_file:
-                        #     img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
-                    except requests.RequestException as e:
-                        print(f"下载图片 {img_url} 失败: {e}")
-                        continue
-                    # print(f'{query} :{img}')
-                    return img
-            else:
-                print(f"未找到与查询 '{query}' 相关的图片结果。")
-                return None
-        except requests.exceptions.RequestException as e:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params) as response:
+                    response.raise_for_status()  # 检查是否有 HTTP 错误
+                    results = await response.json()  # 异步解析 JSON
+                    img = {}
+                    for it in results['results']:
+                        if 'resolution' in it and 'img_src' in it:
+                            print(it['resolution'], it['source'], it['title'], it['img_src'])
+                            parts = it['resolution'].split('x')
+                            if not len(parts) == 2:
+                                continue
+                            img_url = it['img_src']
+                            try:
+                                # 异步下载图片
+                                async with session.get(img_url) as img_response:
+                                    img_response.raise_for_status()
+                                    img_filename = os.path.join(download_dir, os.path.basename(img_url))
+                                    with open(img_filename, 'wb') as out_file:
+                                        out_file.write(await img_response.read())  # 异步读取图片内容
+                                    img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
+                                           'local_path': img_filename}
+                                    with open(img_filename, 'rb') as img_file:
+                                        img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
+                            except aiohttp.ClientError as e:
+                                print(f"下载图片 {img_url} 失败: {e}")
+                                continue
+                            print(f'{query} :{img}')
+                            return img
+                        else:
+                            print(f"未找到与查询 '{query}' 相关的图片结果。")
+                            return None
+        except aiohttp.ClientError as e:
             print(f"搜索查询 '{query}' 失败: {e}")
             return None
         except json.JSONDecodeError as e:
-            print(f"解析 JSON 响应失败: {e}, 响应内容：{response.text}")
+            print(f"解析 JSON 响应失败: {e}, 响应内容：{await response.text()}")
             return None
         except KeyError as e:
-            print(f"KeyError: 缺少预期的键: {e}, 响应内容：{response.text}")
+            print(f"KeyError: 缺少预期的键: {e}, 响应内容：{await response.text()}")
             return None
 
     # 当收到个人消息时触发
