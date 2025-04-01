@@ -60,10 +60,13 @@ class MyPlugin(BasePlugin):
                                     with open(img_filename, 'wb') as out_file:
                                         out_file.write(await img_response.read())  # 异步读取图片内容
                                     img = {'url': img_url, 'local_path': img_filename}
-                                    await self.host.send_active_message('person', sender,
-                                                                        [platform_types.Image(id=img_filename,
-                                                                                              path=img_filename,
-                                                                                              url=img_url)])
+                                    msg = platform_types.MessageChain([
+                                        platform_types.Image(id=img_filename,path=img_filename,url=img_url)
+                                    ])
+                                    await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
+                                                                        target_type="person",
+                                                                        target_id=sender,
+                                                                        message=msg)
                                     # with open(img_filename, 'rb') as img_file:
                                     #     img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
                             except aiohttp.ClientError as e:
