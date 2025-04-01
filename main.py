@@ -18,7 +18,7 @@ class MyPlugin(BasePlugin):
         super().__init__(host)
         for plt in host.get_platform_adapters():
             print('active platform:', plt.config)
-            if plt.config.get('adapter', 'None') == 'lark':
+            if plt.config.get('bot_name', 'None') == '小美':
                 msg = platform_types.MessageChain([
                     platform_types.Plain('飞书小美已就位，随时为您提供帮助！')
                 ])
