@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-import base64
 import json
-
-import requests
-
 from pkg.plugin.context import register, handler, llm_func, BasePlugin, APIHost, EventContext
 from pkg.plugin.events import *  # 导入事件类
 import pkg.platform.types as platform_types
@@ -66,19 +62,15 @@ class MyPlugin(BasePlugin):
                                 # 异步下载图片
                                 async with session.get(img_url) as img_response:
                                     img_response.raise_for_status()
-                                    img_filename = os.path.join(download_dir, os.path.basename(img_url))
+                                    import datetime
+                                    # 获取当前时间戳，精确到秒
+                                    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                                    base_name = os.path.basename(img_url)
+                                    # 构建新的文件名，包含时间戳
+                                    img_filename = os.path.join(download_dir, f"{timestamp}_{base_name}")
                                     with open(img_filename, 'wb') as out_file:
                                         out_file.write(await img_response.read())  # 异步读取图片内容
                                     img = {'url': img_url, 'local_path': img_filename}
-                                    # msg = platform_types.MessageChain([
-                                    #     platform_types.Image(id=img_filename,path=img_filename,url=img_url)
-                                    # ])
-                                    # await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
-                                    #                                     target_type="person",
-                                    #                                     target_id=sender,
-                                    #                                     message=msg)
-                                    with open(img_filename, 'rb') as img_file:
-                                        img['base64'] = base64.b64encode(img_file.read()).decode('utf-8')
                             except aiohttp.ClientError as e:
                                 print(f"下载图片 {img_url} 失败: {e}")
                                 continue
@@ -123,7 +115,7 @@ class MyPlugin(BasePlugin):
             img = await search_task
             ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
             if img:
-                ctx.add_return("reply", [platform_types.Image(base64=img["base64"], url=img["url"])])
+                ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
 
             # 阻止该事件默认行为（向接口获取回复）
             ctx.prevent_default()
