@@ -101,7 +101,6 @@ class MyPlugin(BasePlugin):
             ctx.add_return("reply", ["hello, {}!".format(ctx.event.sender_id)])
             ctx.prevent_default()
         elif msg.startswith(("search", "搜", "搜索", "查询")):
-            ctx.add_return("reply", ["等我找一找，待会儿回复你!"])
             keyword = msg
             # 截取关键字
             for keyword_prefix in ("search", "搜", "搜索", "查询"):
@@ -112,11 +111,12 @@ class MyPlugin(BasePlugin):
             search_task = asyncio.create_task(self.get_local_search_url(keyword, ctx.event.sender_id))
             # 你可以在后续代码中使用 await 等待任务完成
             img = await search_task
+            ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
             if img:
                 ctx.add_return("reply", [platform_types.Image(base64=img["base64"], url=img["url"])])
 
             # 阻止该事件默认行为（向接口获取回复）
-        ctx.prevent_default()
+            ctx.prevent_default()
 
     # 当收到群消息时触发
     @handler(GroupNormalMessageReceived)
