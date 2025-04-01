@@ -115,8 +115,8 @@ class MyPlugin(BasePlugin):
             if img:
                 ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
                 # ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
-                import lark_client.Lark_Image_Sender as Lark_Image_Sender
-                Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id, img["local_path"])
+                from . import lark_client
+                lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id, img["local_path"])
             # 阻止该事件默认行为（向接口获取回复）
             ctx.prevent_default()
 
