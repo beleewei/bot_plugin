@@ -113,7 +113,7 @@ class MyPlugin(BasePlugin):
             # 你可以在后续代码中使用 await 等待任务完成
             img = await search_task
             if img:
-                ctx.add_return("reply", [platform_types.Image(url=f'data:base64,{img["base64"]}')])
+                ctx.add_return("reply", [platform_types.Image(base64=img["base64"], url=img["url"])])
 
             # 阻止该事件默认行为（向接口获取回复）
         ctx.prevent_default()
