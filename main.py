@@ -46,11 +46,11 @@ class MyPlugin(BasePlugin):
                     img = {}
                     for it in results['results']:
                         print('search result:',it)
-                        if 'resolution' in it and 'img_src' in it:
-                            print(it['resolution'], it['source'], it['title'], it['img_src'])
-                            parts = it['resolution'].split('x')
-                            if not len(parts) == 2:
-                                continue
+                        if 'img_src' in it:
+                            # print(it['resolution'], it['source'], it['title'], it['img_src'])
+                            # parts = it['resolution'].split('x')
+                            # if not len(parts) == 2:
+                            #     continue
                             img_url = it['img_src']
                             try:
                                 # 异步下载图片
@@ -59,8 +59,7 @@ class MyPlugin(BasePlugin):
                                     img_filename = os.path.join(download_dir, os.path.basename(img_url))
                                     with open(img_filename, 'wb') as out_file:
                                         out_file.write(await img_response.read())  # 异步读取图片内容
-                                    img = {'url': img_url, 'width': int(parts[0]), 'height': int(parts[1]),
-                                           'local_path': img_filename}
+                                    img = {'url': img_url, 'local_path': img_filename}
                                     await self.host.send_active_message('person', sender,
                                                                         [platform_types.Image(id=img_filename,
                                                                                               path=img_filename,
