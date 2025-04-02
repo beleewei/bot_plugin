@@ -3,6 +3,8 @@ import json
 from pkg.plugin.context import register, handler, BasePlugin, APIHost, EventContext
 from pkg.plugin.events import *  # 导入事件类
 import pkg.platform.types as platform_types
+from . import lark_client
+from . import call_comfyui
 
 
 # 注册插件
@@ -62,7 +64,7 @@ class MyPlugin(BasePlugin):
                                     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                                     base_name = os.path.basename(img_url)
                                     # 定义图片格式后缀名列表
-                                    image_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp','.ico','.webp']
+                                    image_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.webp']
                                     # 检查 base_name 是否以图片格式后缀名结尾
                                     if not any(base_name.lower().endswith(ext) for ext in image_extensions):
                                         # 如果不是图片格式后缀名，强制改为 .png 后缀
@@ -87,6 +89,12 @@ class MyPlugin(BasePlugin):
         except KeyError as e:
             print(f"KeyError: 缺少预期的键: {e}, 响应内容：{await response.text()}")
             return None
+
+    def on_comfyui_callback(self, sender: str, filepath: str):
+        print('callback filepath:', filepath)
+        if not filepath:
+            return
+        lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(sender, filepath)
 
     # 当收到个人消息时触发
     @handler(PersonNormalMessageReceived)
@@ -113,11 +121,20 @@ class MyPlugin(BasePlugin):
             # 你可以在后续代码中使用 await 等待任务完成
             img = await search_task
             if img:
-                ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
+                # ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
                 # ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
-                from . import lark_client
-                lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id, img["local_path"])
+                lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id,
+                                                                                  img["local_path"])
             # 阻止该事件默认行为（向接口获取回复）
+            ctx.prevent_default()
+        elif msg.startswith(("画", "draw", "创作", "paint")):
+            # 回复消息 "hello, <发送者id>!"
+            sender = ctx.event.sender_id
+            ctx.add_return("reply", [f"正则为您[{sender}]生成画作，请稍后..."])
+            call_comfyui.call_create_image(msg,
+                                           level='normal',
+                                           block=False,
+                                           callback=lambda x: self.on_comfyui_callback(sender, x))
             ctx.prevent_default()
 
     # 当收到群消息时触发
