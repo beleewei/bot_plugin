@@ -37,7 +37,7 @@ class MyPlugin(BasePlugin):
                 self.adapter_wechat = plt
                 await self.host.send_active_message(adapter=plt,
                                                     target_type="person",
-                                                    target_id='beleewei',
+                                                    target_id='ilikeit_9819',
                                                     message=msg)
 
 
