@@ -31,14 +31,15 @@ class MyPlugin(BasePlugin):
                                                     target_id='ou_63053bc6508a9fc06be536d937b50e4e',
                                                     message=msg)
             if plt.config.get('port', 0) == 2286:
-                msg = platform_types.MessageChain([
-                    platform_types.Plain('大壮已就位，随时为您提供帮助！')
-                ])
                 self.adapter_wechat = plt
-                await self.host.send_active_message(adapter=plt,
-                                                    target_type="person",
-                                                    target_id='ilikeit_9819',
-                                                    message=msg)
+                # msg = platform_types.MessageChain([
+                #     platform_types.Plain('大壮已就位，随时为您提供帮助！')
+                # ])
+
+            #     await self.host.send_active_message(adapter=plt,
+            #                                         target_type="person",
+            #                                         target_id='ilikeit_9819',
+            #                                         message=msg)
 
 
     async def get_local_search_url(self, query, sender, num_results=10, searx_host="http://124.223.45.165:22109"):
