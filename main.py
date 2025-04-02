@@ -14,21 +14,32 @@ class MyPlugin(BasePlugin):
     # 插件加载时触发
     def __init__(self, host: APIHost):
         super().__init__(host)
-        self.adapter = None
+        self.adapter_lark = None
+        self.adapter_wechat = None
 
     # 异步初始化
     async def initialize(self):
         for plt in self.host.get_platform_adapters():
             print('active platform:', plt.config)
-            if plt.config.get('bot_name', 'None') == '小美':
+            if plt.config.get('port', 0) == 2285:
                 msg = platform_types.MessageChain([
                     platform_types.Plain('飞书小美已就位，随时为您提供帮助！')
                 ])
-                self.adapter = plt
+                self.adapter_lark = plt
                 await self.host.send_active_message(adapter=plt,
                                                     target_type="person",
                                                     target_id='ou_63053bc6508a9fc06be536d937b50e4e',
                                                     message=msg)
+            if plt.config.get('port', 0) == 2286:
+                msg = platform_types.MessageChain([
+                    platform_types.Plain('大壮已就位，随时为您提供帮助！')
+                ])
+                self.adapter_wechat = plt
+                await self.host.send_active_message(adapter=plt,
+                                                    target_type="person",
+                                                    target_id='beleewei',
+                                                    message=msg)
+
 
     async def get_local_search_url(self, query, sender, num_results=10, searx_host="http://124.223.45.165:22109"):
         url = f"{searx_host}/search"
@@ -90,11 +101,21 @@ class MyPlugin(BasePlugin):
             print(f"KeyError: 缺少预期的键: {e}, 响应内容：{await response.text()}")
             return None
 
-    def on_comfyui_callback(self, sender: str, filepath: str):
+    async def on_comfyui_callback(self, sender: str, filepath: str):
         print('callback filepath:', filepath)
         if not filepath:
             return
-        lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(sender, filepath)
+        if self.adapter_lark:
+            lark_client.Lark_Image_Sender(self.adapter_lark.api_client).send_image(sender, filepath)
+        if self.adapter_wechat:
+            msg = platform_types.MessageChain([
+                platform_types.Image(path=filepath)
+            ])
+            await self.host.send_active_message(adapter=self.adapter_wechat,
+                                                target_type="person",
+                                                target_id=sender,
+                                                message=msg)
+        # lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(sender, filepath)
 
     # 当收到个人消息时触发
     @handler(PersonNormalMessageReceived)
@@ -108,7 +129,7 @@ class MyPlugin(BasePlugin):
 
     async def handle_normal_message(self, ctx: EventContext):
         msg = ctx.event.text_message  # 这里的 event 即为 PersonNormalMessageReceived 的对象
-        print('plugin handle:', msg)
+        print(f'chat handle msg:{msg} from:{ctx.event.sender_id}')
         if msg == "hello":  # 如果消息为hello
 
             # 输出调试信息
@@ -131,7 +152,7 @@ class MyPlugin(BasePlugin):
             if img:
                 # ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
                 ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
-                # lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id,
+                # lark_client.Lark_Image_Sender(self.adapter_lark.api_client).send_image(ctx.event.sender_id,
                 #                                                                   img["local_path"])
             # 阻止该事件默认行为（向接口获取回复）
             ctx.prevent_default()
