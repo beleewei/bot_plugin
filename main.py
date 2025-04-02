@@ -102,21 +102,20 @@ class MyPlugin(BasePlugin):
             print(f"KeyError: 缺少预期的键: {e}, 响应内容：{await response.text()}")
             return None
 
-    async def on_comfyui_callback(self, sender: str, filepath: str):
-        print('callback filepath:', filepath)
-        if not filepath:
+    async def on_comfyui_callback(self, sender: str, file: dict):
+        print('callback filepath:', file)
+        if not file:
             return
         if self.adapter_lark:
-            lark_client.Lark_Image_Sender(self.adapter_lark.api_client).send_image(sender, filepath)
+            lark_client.Lark_Image_Sender(self.adapter_lark.api_client).send_image(sender, file.get('filepath'))
         if self.adapter_wechat:
             msg = platform_types.MessageChain([
-                platform_types.Image(path=filepath)
+                platform_types.Image(path=file.get('file_path'), url=file.get('file_url'))
             ])
             await self.host.send_active_message(adapter=self.adapter_wechat,
                                                 target_type="person",
                                                 target_id=sender,
                                                 message=msg)
-        # lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(sender, filepath)
 
     # 当收到个人消息时触发
     @handler(PersonNormalMessageReceived)
@@ -152,11 +151,16 @@ class MyPlugin(BasePlugin):
             img = await search_task
             if img:
                 # ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
-                ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
                 # lark_client.Lark_Image_Sender(self.adapter_lark.api_client).send_image(ctx.event.sender_id,
                 #                                                                   img["local_path"])
-            # 阻止该事件默认行为（向接口获取回复）
-            ctx.prevent_default()
+                if self.adapter_lark:
+                    print('send to lark', img['local_path'])
+                    lark_client.Lark_Image_Sender(self.adapter_lark.api_client).send_image(ctx.event.sender_id,img["local_path"])
+                if self.adapter_wechat:
+                    print('send to wechat', img['local_path'])
+                    ctx.add_return("reply", [platform_types.Image(path=img["local_path"], url=img['url'])])
+                # 阻止该事件默认行为（向接口获取回复）
+                ctx.prevent_default()
         elif msg.startswith(("画", "draw", "创作", "paint")):
             # 回复消息 "hello, <发送者id>!"
             sender = ctx.event.sender_id

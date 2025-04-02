@@ -92,7 +92,7 @@ def download_prompt_output(prompt_id):
             with open(save_path, "wb") as file:
                 file.write(image_content)
             print(f"图片已成功保存到 {save_path}")
-            return {'code': 200, 'filepath': save_path, 'file_url': url}
+            return {'code': 200, 'file_path': save_path, 'file_url': url}
         else:
             print(f"请求失败，状态码：{response.status_code}")
             return {'code': response.status_code}
@@ -144,7 +144,7 @@ def check_task_async(prompt_id, block=True, callback=None):
                 print(f"即将下载图片: {task_result.get('filename')}")
                 result = download_prompt_output(prompt_id)
                 if callback and result.get('code') == 200:
-                    callback(result.get('filepath'))
+                    callback(result)
                 break
             elif not task_result.get('code') == 999:
                 print("flux 调用失败")
