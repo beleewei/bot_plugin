@@ -99,6 +99,14 @@ class MyPlugin(BasePlugin):
     # 当收到个人消息时触发
     @handler(PersonNormalMessageReceived)
     async def person_normal_message_received(self, ctx: EventContext):
+        await self.handle_normal_message(ctx)
+
+    # 当收到群消息时触发
+    @handler(GroupNormalMessageReceived)
+    async def group_normal_message_received(self, ctx: EventContext):
+        await self.handle_normal_message(ctx)
+
+    async def handle_normal_message(self, ctx: EventContext):
         msg = ctx.event.text_message  # 这里的 event 即为 PersonNormalMessageReceived 的对象
         print('plugin handle:', msg)
         if msg == "hello":  # 如果消息为hello
@@ -122,9 +130,9 @@ class MyPlugin(BasePlugin):
             img = await search_task
             if img:
                 # ctx.add_return("reply", [f"我找到一个链接{img['url']}:，等我下载后回复你!"])
-                # ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
-                lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id,
-                                                                                  img["local_path"])
+                ctx.add_return("reply", [platform_types.Image(path=img["local_path"])])
+                # lark_client.Lark_Image_Sender(self.adapter.api_client).send_image(ctx.event.sender_id,
+                #                                                                   img["local_path"])
             # 阻止该事件默认行为（向接口获取回复）
             ctx.prevent_default()
         elif msg.startswith(("画", "draw", "创作", "paint")):
@@ -135,21 +143,6 @@ class MyPlugin(BasePlugin):
                                            level='normal',
                                            block=False,
                                            callback=lambda x: self.on_comfyui_callback(sender, x))
-            ctx.prevent_default()
-
-    # 当收到群消息时触发
-    @handler(GroupNormalMessageReceived)
-    async def group_normal_message_received(self, ctx: EventContext):
-        msg = ctx.event.text_message  # 这里的 event 即为 GroupNormalMessageReceived 的对象
-        if msg == "hello":  # 如果消息为hello
-
-            # 输出调试信息
-            self.ap.logger.debug("hello, {}".format(ctx.event.sender_id))
-
-            # 回复消息 "hello, everyone!"
-            ctx.add_return("reply", ["hello, everyone!"])
-
-            # 阻止该事件默认行为（向接口获取回复）
             ctx.prevent_default()
 
     # 插件卸载时触发
