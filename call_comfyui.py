@@ -180,7 +180,7 @@ def call_create_image(prompt_text='a pretty girl face to the camera with smile',
 
 if __name__ == "__main__":
     print('start')
-    query_task('ebcb68b5-78fa-47e1-913e-fa77d8ed0b02')
+    # query_task('ebcb68b5-78fa-47e1-913e-fa77d8ed0b02')
     # query_running_queue()
     # download_prompt_output('33387261-bcda-41bb-831a-29c92fcbbb35')
     # call_comfyui_workflow('The heroine in a sweet pink dress stands in a cherry blossom shower, holding a bouquet of flowers')

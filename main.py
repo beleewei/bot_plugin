@@ -129,7 +129,7 @@ class MyPlugin(BasePlugin):
 
     async def handle_normal_message(self, ctx: EventContext):
         msg = ctx.event.text_message  # 这里的 event 即为 PersonNormalMessageReceived 的对象
-        print(f'chat handle msg:{msg} from:{ctx.event.sender_id}')
+        print(f'chat handle msg:{msg} from:{ctx.event.launcher_id} to :{ctx.event.sender_id},host:{ctx.host}')
         if msg == "hello":  # 如果消息为hello
 
             # 输出调试信息
@@ -165,7 +165,7 @@ class MyPlugin(BasePlugin):
             # 回复消息 "hello, <发送者id>!"
             sender = ctx.event.sender_id
             ctx.add_return("reply", [f"正则为您[{sender}]生成画作，请稍后..."])
-            call_comfyui.call_create_image(msg,
+            await call_comfyui.call_create_image(msg,
                                            level='normal',
                                            block=False,
                                            callback=lambda x: self.on_comfyui_callback(sender, x))
